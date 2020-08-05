@@ -12,9 +12,17 @@ This action runs a SonarScanner and reports to a centralized server.
 
 The hostname of the sonarqube instance.
 
+### `sonarqube_token`
+
+API Token to authenticate with the SonarQube instance.
+
 ### `iap_client_id`
 
 Client ID of OAuth provider used to get the IAP token.
+
+### `iap_service_account`
+
+Service account credentials for SonarQube IAP.
 
 ## Example usage
 

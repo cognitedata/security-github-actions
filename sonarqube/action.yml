@@ -9,15 +9,21 @@ inputs:
   sonarqube_host:
     description: 'Host of the SonarQube instance'
     required: true
+  sonarqube_token:
+    description: 'API Token to authenticate with the SonarQube instance.'
+    required: true
   iap_client_id:
-    description: 'Client id of the SonarQube IAP'
+    description: 'Client id of the SonarQube IAP.'
+    required: true
+  iap_service_account:
+    description: 'Service account credentials for SonarQube IAP.'
     required: true
 runs:
   using: 'docker'
   image: 'Dockerfile'
   env:
     PROJECT_PATH: ${{ inputs.project_path }}
-    SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+    SONARQUBE_TOKEN: ${{ inputs.sonarqube_token }}
     IAP_TARGET_HOST: ${{ inputs.sonarqube_host }}
     IAP_CLIENT_ID: ${{ inputs.iap_client_id }}
-    IAP_SA: ${{ secrets.SONARQUBE_SERVICE_ACCOUNT }}
+    IAP_SA: ${{ inputs.iap_service_account }}
