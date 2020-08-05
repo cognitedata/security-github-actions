@@ -1,0 +1,23 @@
+# Copyright 2020 Cognite AS
+name: 'SonarQube scan'
+description: 'Scan using SonarScanner'
+inputs:
+  project_path:
+    description: 'Directory to scan with SonarScanner'
+    required: false
+    default: '.'
+  sonarqube_host:
+    description: 'Host of the SonarQube instance'
+    required: true
+  iap_client_id:
+    description: 'Client id of the SonarQube IAP'
+    required: true
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  env:
+    PROJECT_PATH: ${{ inputs.project_path }}
+    SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+    IAP_TARGET_HOST: ${{ inputs.sonarqube_host }}
+    IAP_CLIENT_ID: ${{ inputs.iap_client_id }}
+    IAP_SA: ${{ secrets.SONARQUBE_SERVICE_ACCOUNT }}
