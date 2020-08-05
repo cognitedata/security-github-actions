@@ -39,6 +39,7 @@ fi
 "$SONAR_SCANNER_HOME"/bin/sonar-scanner \
     -Dsonar.projectKey="$REPO_NAME" \
     -Dsonar.projectName="$REPO_NAME" \
+    -Dsonar.projectVersion="$GITHUB_SHA" \
     -Dsonar.sources="$PROJECT_PATH" \
     -Dsonar.host.url="http://localhost:9000" \
     -Dsonar.login="$SONARQUBE_TOKEN" \
