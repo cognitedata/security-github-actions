@@ -21,9 +21,11 @@ until curl -s "http://localhost:9000" -o /dev/null; do
 done
 echo ""
 
+REPO_NAME="${GITHUB_REPOSITORY##*/}"
+
 "$SONAR_SCANNER_HOME"/bin/sonar-scanner \
-    -Dsonar.projectKey="$GITHUB_REPOSITORY" \
-    -Dsonar.projectName="$GITHUB_REPOSITORY" \
+    -Dsonar.projectKey="$REPO_NAME" \
+    -Dsonar.projectName="$REPO_NAME" \
     -Dsonar.sources="$PROJECT_PATH" \
     -Dsonar.host.url="http://localhost:9000" \
     -Dsonar.login="$SONARQUBE_TOKEN"
