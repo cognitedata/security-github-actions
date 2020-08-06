@@ -1,4 +1,4 @@
-#!/bin/sh -le
+#!/bin/bash -le
 # Copyright 2020 Cognite AS
 
 echo "Scanning project $GITHUB_REPOSITORY/$PROJECT_PATH"
@@ -21,9 +21,26 @@ until curl -s "http://localhost:9000" -o /dev/null; do
 done
 echo ""
 
+REPO_NAME="${GITHUB_REPOSITORY##*/}"
+
+PR_ARGS=()
+if [[ "$GITHUB_REF" == refs/pull/*/merge ]] && \
+       [ -n "PR_SOURCE_BRANCH" ] && [ -n "PR_TARGET_BRANCH" ]; then
+    PR_ID="${GITHUB_REF##refs/pull/}"
+    PR_ID="${PR_ID%%/merge}"
+
+    PR_ARGS=(
+        "-Dsonar.pullrequest.branch=$PR_SOURCE_BRANCH"
+        "-Dsonar.pullrequest.key=$PR_ID"
+        "-Dsonar.pullrequest.base=$PR_TARGET_BRANCH"
+    )
+fi
+
 "$SONAR_SCANNER_HOME"/bin/sonar-scanner \
-    -Dsonar.projectKey="$GITHUB_REPOSITORY" \
-    -Dsonar.projectName="$GITHUB_REPOSITORY" \
+    -Dsonar.projectKey="$REPO_NAME" \
+    -Dsonar.projectName="$REPO_NAME" \
+    -Dsonar.projectVersion="$GITHUB_SHA" \
     -Dsonar.sources="$PROJECT_PATH" \
     -Dsonar.host.url="http://localhost:9000" \
-    -Dsonar.login="$SONARQUBE_TOKEN"
+    -Dsonar.login="$SONARQUBE_TOKEN" \
+    "${PR_ARGS[@]}"

@@ -9,15 +9,29 @@ inputs:
   sonarqube_host:
     description: 'Host of the SonarQube instance'
     required: true
-  iap_client_id:
-    description: 'Client id of the SonarQube IAP'
+  sonarqube_token:
+    description: 'API Token to authenticate with the SonarQube instance.'
     required: true
+  iap_client_id:
+    description: 'Client id of the SonarQube IAP.'
+    required: true
+  iap_service_account:
+    description: 'Service account credentials for SonarQube IAP.'
+    required: true
+  pr_source_branch:
+    description: 'Name of the source branch if triggered from PR.'
+    required: false
+  pr_target_branch:
+    description: 'Name of the target branch if triggered from PR.'
+    required: false
 runs:
   using: 'docker'
   image: 'Dockerfile'
   env:
     PROJECT_PATH: ${{ inputs.project_path }}
-    SONARQUBE_TOKEN: ${{ secrets.SONARQUBE_TOKEN }}
+    SONARQUBE_TOKEN: ${{ inputs.sonarqube_token }}
     IAP_TARGET_HOST: ${{ inputs.sonarqube_host }}
     IAP_CLIENT_ID: ${{ inputs.iap_client_id }}
-    IAP_SA: ${{ secrets.SONARQUBE_SERVICE_ACCOUNT }}
+    IAP_SA: ${{ inputs.iap_service_account }}
+    PR_SOURCE_BRANCH: ${{ inputs.pr_source_branch }}
+    PR_TARGET_BRANCH: ${{ inputs.pr_target_branch }}
