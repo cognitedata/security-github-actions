@@ -5,8 +5,8 @@ import os
 import json
 from urllib.parse import quote as urlquote
 
-from google.oauth2.service_account import IDTokenCredentials
-from google.auth.transport.requests import Request
+from msrestazure.azure_active_directory import AADTokenCredentials
+import adal
 
 from twisted.internet import reactor, ssl
 from twisted.web import proxy, server
@@ -16,12 +16,18 @@ from twisted.logger import globalLogBeginner, textFileLogObserver
 
 globalLogBeginner.beginLoggingTo([textFileLogObserver(stderr)])
 
+# Authenticate using service principal w/ key.
+def get_iap_access_token(aad_tenant, client_id, client_secret):
+    
+    authority_host_uri = 'https://login.microsoftonline.com'
+    authority_uri = authority_host_uri + '/' + aad_tenant
+    resource_uri = 'https://management.core.windows.net/'
 
-def get_iap_creds(client_id, service_account):
-    sa_info = json.loads(service_account)
-    return IDTokenCredentials.from_service_account_info(
-        sa_info, target_audience=client_id
-    )
+    context = adal.AuthenticationContext(authority_uri, api_version=None)
+    mgmt_token = context.acquire_token_with_client_credentials(resource_uri, client_id, client_secret)
+    accessToken = mgmt_token.get("accessToken")
+
+    return accessToken
 
 
 class IAPReverseProxyResource(proxy.ReverseProxyResource):
@@ -32,9 +38,9 @@ class IAPReverseProxyResource(proxy.ReverseProxyResource):
             super().proxyClientFactoryClass(*args, **kwargs),
         )
 
-    def __init__(self, creds, custom_auth_header, target_uri, target_port, path=b""):
+    def __init__(self, accessToken, custom_auth_header, target_uri, target_port, path=b""):
         super().__init__(target_uri, target_port, path)
-        self.creds = creds
+        self.accessToken = accessToken
         self.custom_auth_header = custom_auth_header
 
     def render(self, request):
@@ -44,17 +50,13 @@ class IAPReverseProxyResource(proxy.ReverseProxyResource):
                 request.requestHeaders.getRawHeaders(b"authorization", []),
             )
 
-        extraHeaders = {}
-        self.creds.before_request(Request(), None, None, extraHeaders)
-
-        for h, v in extraHeaders.items():
-            request.requestHeaders.setRawHeaders(h.encode("ascii"), [v.encode("ascii")])
+        request.requestHeaders.setRawHeaders(b"authorization", [accessToken])        
 
         return super().render(request)
 
     def getChild(self, path, request):
         return IAPReverseProxyResource(
-            self.creds,
+            self.accessToken,
             self.custom_auth_header,
             self.host,
             self.port,
@@ -67,13 +69,14 @@ target_host = os.environ["IAP_TARGET_HOST"]
 target_port = (
     int(os.environ.get("IAP_TARGET_PORT")) if os.environ.get("TARGET_PORT") else 443
 )
-client_id = os.environ["IAP_CLIENT_ID"]
-sa_data = os.environ["IAP_SA"]
+aad_tenant = os.environ["IAP_AAD_TENANT"]
+client_id = os.environ["IAP_AAD_APP_ID"]
+client_secret = os.environ["IAP_AAD_CLIENT_SECRET"]
 
-creds = get_iap_creds(client_id, sa_data)
+accessToken = get_iap_access_token(aad_tenant, client_id, client_secret)
 
 site = server.Site(
-    IAPReverseProxyResource(creds, custom_auth_header, target_host, target_port)
+    IAPReverseProxyResource(accessToken, custom_auth_header, target_host, target_port)
 )
 reactor.listenTCP(9000, site, interface="127.0.0.1")
 reactor.run()

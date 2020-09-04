@@ -14,7 +14,8 @@ RUN apk add --no-cache \
     py3-openssl \
     py3-twisted \
     py3-service_identity \
-    py3-google-auth \
     curl
+
+RUN pip3 install msrestazure
 
 ENTRYPOINT ["/entrypoint.sh"]
