@@ -69,7 +69,7 @@ target_host = os.environ["IAP_TARGET_HOST"]
 target_port = (
     int(os.environ.get("IAP_TARGET_PORT")) if os.environ.get("TARGET_PORT") else 443
 )
-aad_tenant = os.environ["IAP_AAD_TENANT"]
+aad_tenant = os.environ["AAD_TENANT"]
 client_id = os.environ["IAP_AAD_APP_ID"]
 client_secret = os.environ["IAP_AAD_CLIENT_SECRET"]
 
