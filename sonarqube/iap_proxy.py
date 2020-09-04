@@ -70,8 +70,8 @@ target_port = (
     int(os.environ.get("IAP_TARGET_PORT")) if os.environ.get("TARGET_PORT") else 443
 )
 aad_tenant = os.environ["AAD_TENANT"]
-client_id = os.environ["IAP_AAD_APP_ID"]
-client_secret = os.environ["IAP_AAD_CLIENT_SECRET"]
+client_id = os.environ["IAP_CLIENT_ID"]
+client_secret = os.environ["IAP_CLIENT_SECRET"]
 
 accessToken = get_iap_access_token(aad_tenant, client_id, client_secret)
 
