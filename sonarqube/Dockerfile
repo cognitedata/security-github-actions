@@ -16,4 +16,6 @@ RUN apk add --no-cache \
     py3-service_identity \
     curl
 
+RUN pip3 install msrestazure
+
 ENTRYPOINT ["/entrypoint.sh"]
