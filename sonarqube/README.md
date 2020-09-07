@@ -16,17 +16,13 @@ The hostname of the sonarqube instance.
 
 API Token to authenticate with the SonarQube instance.
 
-### `aad_tenant`
-
-AAD tenant.
-
 ### `iap_client_id`
 
-Client ID of the app registered with Microsoft identity platform.
+Client ID of OAuth provider used to get the IAP token.
 
-### `iap_client_secret`
+### `api_key`
 
-Client secret to use for authentication when requesting an IAP token.
+API key used to access Google APIs.
 
 ### `pr_source_branch`
 Name of the source branch if triggered from PR.
@@ -41,8 +37,7 @@ with:
   project_path: '/path-to-project/'
   sonarqube_host: 'sonarqube.example.com'
   sonarqube_token: ${{ secrets.SONARQUBE_TOKEN }}
-  aad_tenant: ${{ secrets.AAD_TENANT }}
   iap_client_id: ${{ secrets.IAP_CLIENT_ID }}
-  iap_client_secret: ${{ secrets.IAP_CLIENT_SECRET }}
+  api_key: ${{ secrets.API_KEY }}
   pr_source_branch: ${{ github.head_ref }}
   pr_target_branch: ${{ github.base_ref }}
