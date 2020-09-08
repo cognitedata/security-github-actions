@@ -12,15 +12,15 @@ inputs:
   sonarqube_token:
     description: 'API Token to authenticate with the SonarQube instance.'
     required: true
-  aad_tenant:
-    description: 'Azure AD tenant.'
-    required: true
   iap_client_id:
     description: 'Client id of the app registered with Microsoft identity platform.'
     required: true
-  iap_client_secret:
-    description: 'Client secret to use for authentication when requesting a token.'
+  iap_service_account:
+    description: 'Service account credentials for SonarQube IAP.'
     required: true
+  api_key: 
+    description: 'API key used to access Google APIs.'
+    required: true   
   pr_source_branch:
     description: 'Name of the source branch if triggered from PR.'
     required: false
@@ -34,8 +34,8 @@ runs:
     PROJECT_PATH: ${{ inputs.project_path }}
     SONARQUBE_TOKEN: ${{ inputs.sonarqube_token }}
     IAP_TARGET_HOST: ${{ inputs.sonarqube_host }}
-    AAD_TENANT: ${{ inputs.aad_tenant }}
     IAP_CLIENT_ID: ${{ inputs.iap_client_id }}
-    IAP_CLIENT_SECRET: ${{ inputs.iap_client_secret }}
+    IAP_SA: ${{ inputs.iap_service_account }}
+    API_KEY: ${{ inputs.api_key }}
     PR_SOURCE_BRANCH: ${{ inputs.pr_source_branch }}
     PR_TARGET_BRANCH: ${{ inputs.pr_target_branch }}
