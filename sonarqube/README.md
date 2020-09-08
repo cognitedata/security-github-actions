@@ -20,10 +20,13 @@ API Token to authenticate with the SonarQube instance.
 
 Client ID of OAuth provider used to get the IAP token.
 <<<<<<< HEAD
+<<<<<<< HEAD
 
 ### `iap_service_account`
   
 Service account credentials for SonarQube IAP.
+=======
+>>>>>>> b8018cfb3913c6bff0c09aaab21382d5a3a1fdfa
 =======
 >>>>>>> b8018cfb3913c6bff0c09aaab21382d5a3a1fdfa
 
@@ -46,7 +49,10 @@ with:
   sonarqube_token: ${{ secrets.SONARQUBE_TOKEN }}
   iap_client_id: ${{ secrets.IAP_CLIENT_ID }}
 <<<<<<< HEAD
+<<<<<<< HEAD
   iap_service_account: ${{ secrets.IAP_SA }}
+=======
+>>>>>>> b8018cfb3913c6bff0c09aaab21382d5a3a1fdfa
 =======
 >>>>>>> b8018cfb3913c6bff0c09aaab21382d5a3a1fdfa
   api_key: ${{ secrets.API_KEY }}
