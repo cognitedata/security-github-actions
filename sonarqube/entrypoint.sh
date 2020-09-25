@@ -43,4 +43,5 @@ fi
     -Dsonar.sources="$PROJECT_PATH" \
     -Dsonar.host.url="http://localhost:9000" \
     -Dsonar.login="$SONARQUBE_TOKEN" \
+    -Dsonar.python.coverage.reportPaths="coverage-reports/*coverage-*.xml" \
     "${PR_ARGS[@]}"
