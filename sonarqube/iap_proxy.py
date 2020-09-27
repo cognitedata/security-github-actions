@@ -3,10 +3,12 @@
 from sys import stderr
 import os
 import json
+import requests
 from urllib.parse import quote as urlquote
 
-from msrestazure.azure_active_directory import AADTokenCredentials
-import adal
+from google.oauth2.service_account import IDTokenCredentials
+from google.oauth2 import id_token
+from google.auth.transport.requests import Request
 
 from twisted.internet import reactor, ssl
 from twisted.web import proxy, server
@@ -16,18 +18,23 @@ from twisted.logger import globalLogBeginner, textFileLogObserver
 
 globalLogBeginner.beginLoggingTo([textFileLogObserver(stderr)])
 
-# Authenticate using service principal w/ key.
-def get_iap_access_token(aad_tenant, client_id, client_secret):
-    
-    authority_host_uri = 'https://login.microsoftonline.com'
-    authority_uri = authority_host_uri + '/' + aad_tenant
-    resource_uri = 'https://management.core.windows.net/'
+def get_oidc_token(request, client_id, service_account):
+    sa_info = json.loads(service_account)
+    credentials = IDTokenCredentials.from_service_account_info(
+        sa_info, target_audience=client_id
+    )
+    credentials.refresh(request)
+    return credentials.token
 
-    context = adal.AuthenticationContext(authority_uri, api_version=None)
-    mgmt_token = context.acquire_token_with_client_credentials(resource_uri, client_id, client_secret)
-    accessToken = mgmt_token.get("accessToken")
-
-    return accessToken
+def exchange_google_id_token_for_gcip_id_token(api_key, google_open_id_connect_token):
+  SIGN_IN_WITH_IDP_API = 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithIdp'    
+  url = SIGN_IN_WITH_IDP_API + '?key=' + api_key
+  data={'requestUri': 'http://localhost',
+        'returnSecureToken': True,
+        'postBody':'id_token=' + google_open_id_connect_token + '&providerId=google.com'}
+  resp = requests.post(url, data)
+  res = resp.json()
+  return res['idToken']
 
 
 class IAPReverseProxyResource(proxy.ReverseProxyResource):
@@ -38,9 +45,9 @@ class IAPReverseProxyResource(proxy.ReverseProxyResource):
             super().proxyClientFactoryClass(*args, **kwargs),
         )
 
-    def __init__(self, accessToken, custom_auth_header, target_uri, target_port, path=b""):
+    def __init__(self, id_token, custom_auth_header, target_uri, target_port, path=b""):
         super().__init__(target_uri, target_port, path)
-        self.accessToken = accessToken
+        self.id_token = id_token
         self.custom_auth_header = custom_auth_header
 
     def render(self, request):
@@ -50,33 +57,34 @@ class IAPReverseProxyResource(proxy.ReverseProxyResource):
                 request.requestHeaders.getRawHeaders(b"authorization", []),
             )
 
-        request.requestHeaders.setRawHeaders(b"authorization", [accessToken])        
+        request.requestHeaders.setRawHeaders(b"authorization", ['Bearer {}'.format(self.id_token)])
 
         return super().render(request)
 
     def getChild(self, path, request):
         return IAPReverseProxyResource(
-            self.accessToken,
+            self.id_token,
             self.custom_auth_header,
             self.host,
             self.port,
             self.path + b"/" + urlquote(path, safe=b"").encode("utf-8"),
         )
 
-
 custom_auth_header = os.environ.get("IAP_CUSTOM_AUTH_HEADER")
 target_host = os.environ["IAP_TARGET_HOST"]
 target_port = (
     int(os.environ.get("IAP_TARGET_PORT")) if os.environ.get("TARGET_PORT") else 443
 )
-aad_tenant = os.environ["AAD_TENANT"]
-client_id = os.environ["IAP_AAD_APP_ID"]
-client_secret = os.environ["IAP_AAD_CLIENT_SECRET"]
+client_id = os.environ["IAP_CLIENT_ID"]
+sa_data = os.environ["IAP_SA"]
+api_key = os.environ["API_KEY"]
 
-accessToken = get_iap_access_token(aad_tenant, client_id, client_secret)
+open_id_connect_token = get_oidc_token(Request(), client_id, sa_data)
+id_token = exchange_google_id_token_for_gcip_id_token(api_key, open_id_connect_token)
 
 site = server.Site(
-    IAPReverseProxyResource(accessToken, custom_auth_header, target_host, target_port)
+    IAPReverseProxyResource(id_token, custom_auth_header, target_host, target_port)
 )
+
 reactor.listenTCP(9000, site, interface="127.0.0.1")
 reactor.run()
